@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>밤 옥상 쉼터</title>
+<style>
+:root{
+  --sky-top:#04051a;
+  --sky-mid:#12123f;
+  --sky-low:#34235a;
+  --ink:#eef0ff;
+  --ink-dim:#b9bde0;
+  --pink:#ff5fd2;
+  --cyan:#5ff4ff;
+  --warm:#ffd98a;
+  --btn-bg:rgba(16,16,48,.62);
+  --font:"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--sky-top);color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent}
+body{touch-action:manipulation;user-select:none;-webkit-user-select:none}
+
+/* ---------- 배경 ---------- */
+#scene{position:fixed;inset:0;overflow:hidden;
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 42%,var(--sky-low) 68%,#5a2f5c 100%)}
+.layer{position:absolute;inset:0;pointer-events:none}
+.bgstar{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
+  animation:tw var(--d,3s) ease-in-out var(--dl,0s) infinite}
+@keyframes tw{0%,100%{opacity:.2}50%{opacity:.9}}
+
+.ustar{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;
+  background:radial-gradient(circle,#fff 0 2px,rgba(255,244,200,.7) 3px,rgba(255,244,200,0) 9px);
+  filter:drop-shadow(0 0 4px #fff6cc);
+  animation:born .6s ease-out,tw2 2.6s ease-in-out .6s infinite}
+.ustar::before,.ustar::after{content:"";position:absolute;left:0;top:11px;width:24px;height:2px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),#fff,rgba(255,255,255,0))}
+.ustar::after{transform:rotate(90deg)}
+.ustar.bye{animation:bye .6s ease-in forwards}
+@keyframes born{0%{transform:scale(0);opacity:0}60%{transform:scale(1.5);opacity:1}100%{transform:scale(1)}}
+@keyframes tw2{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.7) rotate(20deg);opacity:.65}}
+@keyframes bye{to{transform:scale(0);opacity:0}}
+
+.shoot{position:absolute;width:150px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),#fff);filter:drop-shadow(0 0 6px #fff);
+  animation:shoot 1.4s ease-out forwards}
+@keyframes shoot{
+  0%{opacity:0;transform:translate(0,0) rotate(var(--a))}
+  12%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--a))}}
+
+#world{position:absolute;left:0;top:0;pointer-events:none}
+.neon{filter:drop-shadow(0 0 2px currentColor) drop-shadow(0 0 7px currentColor)}
+.neon.flick{animation:flick 7s infinite}
+@keyframes flick{0%,40%,44%,48%,100%{opacity:1}42%,46%{opacity:.25}}
+.blink{animation:blink 1.8s steps(1) infinite}
+@keyframes blink{50%{opacity:.15}}
+
+/* ---------- 캐릭터 ---------- */
+#char{position:absolute;left:0;top:0;transform-origin:50% 100%;pointer-events:none;will-change:transform}
+#char svg{width:100%;height:100%;display:block;overflow:visible}
+#char svg g{transform-box:view-box}
+#char .v{display:none}
+#char[data-view="front"] .vfront,
+#char[data-view="back"] .vback,
+#char[data-view="side"] .vside{display:inline}
+#char .stick{display:none}
+#char.smoker .stick{display:inline}
+
+.lf,.lb{transform-origin:50px 128px}
+.af,.ab{transform-origin:50px 82px}
+#char.walking .lf,#char.walking .ab{animation:swA .7s ease-in-out infinite}
+#char.walking .lb,#char.walking .af{animation:swB .7s ease-in-out infinite}
+#char.walking .bob{animation:bob .35s ease-in-out infinite alternate}
+@keyframes swA{0%,100%{transform:rotate(24deg)}50%{transform:rotate(-24deg)}}
+@keyframes swB{0%,100%{transform:rotate(-24deg)}50%{transform:rotate(24deg)}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-2.5px)}}
+
+.ua{transform-origin:69.5px 82px;transition:transform .45s ease}
+.fa{transform-origin:69.5px 104px;transition:transform .45s ease}
+#char.raise .ua{transform:rotate(-146deg)}
+#char.raise .fa{transform:rotate(-122deg)}
+
+.puffs{position:absolute;left:50%;top:15%;width:0;height:0}
+.puff{position:absolute;left:0;top:0;width:var(--sz);height:var(--sz);
+  margin:calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);border-radius:50%;
+  background:radial-gradient(circle at 50% 55%,rgba(255,255,255,.95),rgba(235,240,255,.55) 42%,rgba(235,240,255,0) 70%);
+  filter:blur(1.5px);animation:puff 2.8s ease-out forwards}
+.puff::before,.puff::after{content:"";position:absolute;width:70%;height:70%;border-radius:50%;background:inherit}
+.puff::before{left:-28%;top:20%}
+.puff::after{right:-28%;top:6%}
+@keyframes puff{
+  0%{opacity:0;transform:translateY(0) scale(.25)}
+  18%{opacity:.95}
+  100%{opacity:0;transform:translateY(calc(var(--sz) * -1.1)) scale(1.5)}}
+
+/* ---------- 화면 UI ---------- */
+#ui{position:absolute;left:0;right:0;top:0;padding:max(58px,8vh) 16px 0;text-align:center;pointer-events:none}
+#ui button,#home{pointer-events:auto}
+h1{margin:0;font-size:clamp(32px,6.4vw,58px);font-weight:800;letter-spacing:.06em;color:#ffeefb;
+  text-shadow:0 0 4px #fff,0 0 10px var(--pink),0 0 22px var(--pink),0 0 42px #c03aa8;
+  animation:title 9s infinite}
+@keyframes title{0%,62%,66%,100%{opacity:1}64%{opacity:.55}}
+.sub{margin:12px 0 0;font-size:clamp(16px,2.6vw,20px);color:var(--ink);text-shadow:0 2px 8px #000,0 0 2px #000;min-height:1.4em;word-break:keep-all}
+.q{margin:30px 0 14px;font-size:18px;color:var(--ink-dim);text-shadow:0 2px 6px #000}
+
+button{font:inherit;color:var(--ink);cursor:pointer;border:none;background:none}
+.nbtn{min-width:96px;padding:12px 18px;border-radius:999px;font-size:17px;font-weight:700;
+  background:var(--btn-bg);border:1.5px solid var(--cyan);
+  box-shadow:0 0 8px rgba(95,244,255,.55),inset 0 0 8px rgba(95,244,255,.25);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);transition:transform .15s,box-shadow .15s}
+.nbtn:hover{box-shadow:0 0 14px rgba(95,244,255,.85),inset 0 0 10px rgba(95,244,255,.35)}
+.nbtn:active{transform:scale(.96)}
+.nbtn.pink{border-color:var(--pink);box-shadow:0 0 8px rgba(255,95,210,.55),inset 0 0 8px rgba(255,95,210,.25)}
+.nbtn.ghost{border-color:rgba(255,255,255,.45);box-shadow:none;font-weight:500;font-size:15px;padding:9px 18px}
+.modes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.timer-btn{margin-top:28px;width:160px;height:160px;border-radius:50%;font-size:19px;font-weight:800;
+  background:radial-gradient(circle,rgba(60,20,70,.7),rgba(16,16,48,.7));border:2px solid var(--pink);
+  box-shadow:0 0 14px rgba(255,95,210,.7),inset 0 0 18px rgba(255,95,210,.35);
+  animation:pulse 2.4s ease-in-out infinite;word-break:keep-all;padding:0 18px}
+.timer-btn:active{transform:scale(.96)}
+@keyframes pulse{50%{box-shadow:0 0 26px rgba(255,95,210,.95),inset 0 0 22px rgba(255,95,210,.5)}}
+
+.clock{margin-top:22px;font-size:clamp(60px,13vw,104px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1;
+  color:#e9fdff;text-shadow:0 0 6px var(--cyan),0 0 18px var(--cyan),0 2px 10px #000}
+.breath{margin:16px 0 18px;font-size:clamp(22px,4vw,28px);font-weight:700;text-shadow:0 2px 8px #000}
+.breath b{display:inline-block;min-width:1.2em;font-variant-numeric:tabular-nums}
+.breath.in{color:#bff8ff}
+.breath.out{color:#ffd6f3}
+.breath.pause{color:#d8d8e8}
+
+.done-text{margin:26px 0 0;font-size:clamp(22px,4.2vw,30px);font-weight:800;text-shadow:0 0 10px rgba(255,95,210,.8),0 2px 8px #000;word-break:keep-all}
+.cheer{margin:14px auto 0;max-width:30em;font-size:17px;line-height:1.5;color:#fff6d8;text-shadow:0 2px 8px #000;word-break:keep-all}
+.count{margin:10px 0 18px;font-size:15px;color:var(--ink-dim);text-shadow:0 2px 6px #000}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+#home{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));z-index:5;
+  padding:8px 14px;font-size:14px;border-radius:999px;background:var(--btn-bg);border:1px solid rgba(255,255,255,.4)}
+#home:disabled{opacity:.3;cursor:default}
+
+@media (max-height:620px){
+  #ui{padding-top:50px}
+  .q{margin-top:16px}
+  .timer-btn{width:130px;height:130px;margin-top:16px;font-size:17px}
+  .clock{margin-top:10px}
+  .done-text{margin-top:12px}
+}
+</style>
+</head>
+<body>
+<div id="scene">
+  <div class="layer" id="bgStars"></div>
+  <div class="layer" id="userStars"></div>
+  <div class="layer" id="shooting"></div>
+  <svg id="world" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div id="char" data-view="front">
+    <div class="puffs" id="puffs"></div>
+    <svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="50" cy="197" rx="22" ry="4.5" fill="#000" opacity=".35"/>
+
+      <!-- 앞모습 -->
+      <g class="v vfront">
+        <ellipse cx="50" cy="58" rx="22" ry="20" fill="#564b8c"/>
+        <rect x="39" y="126" width="10" height="64" rx="4" fill="#2b2f45"/>
+        <rect x="51" y="126" width="10" height="64" rx="4" fill="#2b2f45"/>
+        <ellipse cx="43" cy="194" rx="7.5" ry="4" fill="#e8e8f0"/>
+        <ellipse cx="57" cy="194" rx="7.5" ry="4" fill="#e8e8f0"/>
+        <path d="M30 84 Q30 71 42 69 L58 69 Q70 71 70 84 L70 134 Q50 138 30 134 Z" fill="#6b5fa8"/>
+        <path d="M40 114 L60 114 L62 128 L38 128 Z" fill="#5b4f95"/>
+        <path d="M46 72 L45 92 M54 72 L55 92" stroke="#e8e4ff" stroke-width="1.6" stroke-linecap="round"/>
+        <rect x="26" y="80" width="9" height="44" rx="4.5" fill="#5f539a"/>
+        <circle cx="30.5" cy="126" r="5" fill="#f2c8a0"/>
+        <rect x="65" y="80" width="9" height="44" rx="4.5" fill="#5f539a"/>
+        <circle cx="69.5" cy="126" r="5" fill="#f2c8a0"/>
+        <rect class="stick" x="70" y="125.5" width="14" height="3" rx="1.5" fill="#fbfbff" transform="rotate(-18 70 127)"/>
+        <circle cx="50" cy="50" r="16" fill="#f2c8a0"/>
+        <path d="M34 49 Q33 32 50 32 Q67 32 66 49 Q61 40 50 41 Q39 40 34 49 Z" fill="#2a2230"/>
+        <circle cx="44" cy="52" r="1.7" fill="#2a2230"/>
+        <circle cx="56" cy="52" r="1.7" fill="#2a2230"/>
+        <circle cx="40.5" cy="57" r="2.4" fill="#f19c9c" opacity=".55"/>
+        <circle cx="59.5" cy="57" r="2.4" fill="#f19c9c" opacity=".55"/>
+        <path d="M47 59.5 Q50 61.5 53 59.5" stroke="#8a4f4f" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      </g>
+
+      <!-- 뒷모습 (건물 쪽을 바라봄) -->
+      <g class="v vback">
+        <rect x="39" y="126" width="10" height="64" rx="4" fill="#2b2f45"/>
+        <rect x="51" y="126" width="10" height="64" rx="4" fill="#2b2f45"/>
+        <ellipse cx="43" cy="194" rx="7.5" ry="4" fill="#e8e8f0"/>
+        <ellipse cx="57" cy="194" rx="7.5" ry="4" fill="#e8e8f0"/>
+        <path d="M30 84 Q30 71 42 69 L58 69 Q70 71 70 84 L70 134 Q50 138 30 134 Z" fill="#6b5fa8"/>
+        <path d="M36 70 Q50 98 64 70 Z" fill="#564b8c"/>
+        <rect x="26" y="80" width="9" height="44" rx="4.5" fill="#5f539a"/>
+        <circle cx="30.5" cy="126" r="5" fill="#f2c8a0"/>
+        <g class="ua">
+          <rect x="65" y="80" width="9" height="26" rx="4.5" fill="#5f539a"/>
+          <g class="fa">
+            <rect x="65" y="100" width="9" height="24" rx="4.5" fill="#5f539a"/>
+            <circle cx="69.5" cy="126" r="5" fill="#f2c8a0"/>
+            <rect class="stick" x="68" y="126" width="3" height="14" rx="1.5" fill="#fbfbff"/>
+          </g>
+        </g>
+        <circle cx="34.5" cy="52" r="3" fill="#e9b88f"/>
+        <circle cx="65.5" cy="52" r="3" fill="#e9b88f"/>
+        <circle cx="50" cy="50" r="16" fill="#2a2230"/>
+        <path d="M38 60 Q50 68 62 60" stroke="#3a3044" stroke-width="2" fill="none"/>
+      </g>
+
+      <!-- 옆모습 (오른쪽을 봄, 왼쪽은 뒤집어서) -->
+      <g class="v vside">
+        <g class="ab">
+          <rect x="45.5" y="80" width="9" height="44" rx="4.5" fill="#463c78"/>
+          <circle cx="50" cy="126" r="5" fill="#d9ad86"/>
+        </g>
+        <g class="lb">
+          <rect x="45" y="126" width="10" height="64" rx="4" fill="#20243a"/>
+          <ellipse cx="53" cy="194" rx="8.5" ry="4" fill="#c9c9d6"/>
+        </g>
+        <g class="bob">
+          <ellipse cx="39" cy="64" rx="9" ry="14" fill="#564b8c"/>
+          <path d="M36 84 Q36 71 48 69 L56 69 Q66 71 66 84 L66 134 Q50 137 36 134 Z" fill="#6b5fa8"/>
+          <circle cx="52" cy="50" r="16" fill="#f2c8a0"/>
+          <circle cx="68" cy="53" r="2.2" fill="#f2c8a0"/>
+          <path d="M36 53 Q34 33 52 33 Q67 33 68 45 Q58 40 52 45 Q47 51 45 61 Q38 61 36 53 Z" fill="#2a2230"/>
+          <circle cx="49" cy="53" r="3" fill="#e9b88f"/>
+          <circle cx="61" cy="51" r="1.7" fill="#2a2230"/>
+          <path d="M61 59.5 L65 59" stroke="#8a4f4f" stroke-width="1.3" stroke-linecap="round"/>
+        </g>
+        <g class="lf">
+          <rect x="45" y="126" width="10" height="64" rx="4" fill="#2b2f45"/>
+          <ellipse cx="53" cy="194" rx="8.5" ry="4" fill="#e8e8f0"/>
+        </g>
+        <g class="af">
+          <rect x="45.5" y="80" width="9" height="44" rx="4.5" fill="#5f539a"/>
+          <circle cx="50" cy="126" r="5" fill="#f2c8a0"/>
+          <rect class="stick" x="51" y="125.5" width="13" height="3" rx="1.5" fill="#fbfbff" transform="rotate(-14 51 127)"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <button id="home" class="nbtn" hidden>처음으로</button>
+
+  <main id="ui">
+    <h1>밤 옥상 쉼터</h1>
+    <p class="sub" id="sub">쉬어 가세요.</p>
+
+    <section id="sIdle">
+      <p class="q">지금 나는?</p>
+      <div class="modes">
+        <button class="nbtn" data-mode="non">비흡연자</button>
+        <button class="nbtn" data-mode="quit">금연 중</button>
+        <button class="nbtn" data-mode="smoke">흡연자</button>
+      </div>
+    </section>
+
+    <section id="sReady" hidden>
+      <button class="timer-btn" id="startBtn"></button>
+    </section>
+
+    <section id="sRun" hidden>
+      <div class="clock" id="clock">3:00</div>
+      <div class="breath in" id="breath"><span id="bw">들이쉬세요</span> <b id="bn">4</b></div>
+      <div class="row">
+        <button class="nbtn" id="pauseBtn">일시정지</button>
+        <button class="nbtn ghost" id="stopBtn">그만하기</button>
+      </div>
+    </section>
+
+    <section id="sDone" hidden>
+      <p class="done-text" id="doneText"></p>
+      <p class="cheer" id="cheer"></p>
+      <p class="count" id="countText"></p>
+      <div class="row">
+        <button class="nbtn pink" id="againBtn">한 번 더</button>
+        <button class="nbtn ghost" id="homeBtn2">처음으로</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ===== 모드별 문구 ===== */
+const MODES = {
+  non: {
+    ready: '잠깐 바람 쐬고 가요.', btn: '3분 쉬어 가기', done: '3분 쉬었어요.',
+    raise: false, big: false, stick: false,
+    cheers: [
+      '여기까지 온 것만으로도 오늘은 충분해요.',
+      '별은 매일 밤 같은 자리에서 기다리고 있어요.',
+      '숨 한 번에 마음이 조금 가벼워졌길 바라요.',
+      '도시도 하나씩 불을 끄고 쉬는 시간이에요.',
+      '언제든 바람 쐬러 또 와요.'
+    ]
+  },
+  quit: {
+    ready: '담배 생각날 때, 3분만 여기서 버텨요.', btn: '3분 버티기', done: '3분 버텼어요. 담배 생각이 지나갔나요?',
+    raise: true, big: true, stick: false,
+    cheers: [
+      '방금 담배 생각 하나를 이겼어요.',
+      '이런 3분이 쌓여서 어제보다 더 멀리 왔어요.',
+      '참아 낸 건 약해서가 아니라 단단해서예요.',
+      '오늘 밤공기는 연기 없이 마셔도 시원하죠?',
+      '다음에 또 생각나면 여기로 와요.'
+    ]
+  },
+  smoke: {
+    ready: '오늘도 수고했어요. 잠깐 숨 돌리고 가요.', btn: '3분 숨 돌리기', done: '3분 쉬었어요.',
+    raise: true, big: true, stick: true,
+    cheers: [
+      '오늘 하루도 정말 수고 많았어요.',
+      '밤공기 한 모금, 괜찮죠?',
+      '잠깐이라도 아무 생각 없이 쉬어 가요.',
+      '불 켜진 창마다 각자의 하루가 있어요.',
+      '또 숨 돌리고 싶을 때 와요.'
+    ]
+  }
+};
+const TOTAL = 180, CYCLE = 10, INHALE = 4;
+
+const $ = s => document.querySelector(s);
+const G = {};            // 화면 크기와 옥상 위치
+let blocks = [];         // 건물 영역 (밤하늘 판정용)
+
+/* ===== 배경 그리기 ===== */
+function rng(seed){ return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+function buildWorld(){
+  const w = innerWidth, h = innerHeight;
+  G.w = w; G.h = h;
+  G.railTop = Math.round(h * 0.62);
+  G.railH = Math.round(Math.min(60, Math.max(34, h * 0.07)));
+  G.railBase = G.railTop + G.railH;
+  blocks = [];
+  const R = rng(20251109);
+  const svg = $('#world');
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  let s = `<defs>
+    <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2648"/><stop offset="1" stop-color="#15142a"/></linearGradient>
+    <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff7fd8" stop-opacity="0"/><stop offset="1" stop-color="#ff7fd8" stop-opacity=".18"/></linearGradient>
+    <linearGradient id="railG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a80b8"/><stop offset="1" stop-color="#3a3f6a"/></linearGradient>
+  </defs>`;
+
+  const neonWords = ['BAR', 'OPEN', '24H', 'HOTEL', 'CAFE', 'NOODLE', 'KARAOKE'];
+  const neonColors = ['#ff5fd2', '#5ff4ff', '#ffb347', '#9dff6b', '#c48bff'];
+  let neonCount = 0;
+
+  function layer(o){
+    let out = '', x = -12;
+    const base = G.railBase;
+    while (x < w + 12) {
+      const bw = o.wMin + R() * (o.wMax - o.wMin);
+      const bh = h * (o.hMin + R() * (o.hMax - o.hMin));
+      let top = Math.max(h * 0.17, base - bh);
+      if (o.neon) top = Math.min(top, G.railTop - 46);
+      out += `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${(bw + 1).toFixed(1)}" height="${(base - top).toFixed(1)}" fill="${o.color}"/>`;
+      blocks.push({ x, y: top, w: bw });
+      if (o.roof && R() < 0.3) {
+        const ax = x + bw * (0.3 + R() * 0.4);
+        out += `<line x1="${ax}" y1="${top}" x2="${ax}" y2="${top - 18 - R() * 20}" stroke="${o.color}" stroke-width="2"/>`;
+        if (R() < 0.6) out += `<circle class="blink" cx="${ax}" cy="${top - 20}" r="2.2" fill="#ff4d4d" style="animation-delay:${(R() * 1.8).toFixed(2)}s"/>`;
+      }
+      let win = `<g fill="${o.winColor}">`;
+      for (let wy = top + 8; wy < base - 12; wy += o.ch) {
+        for (let wx = x + 6; wx < x + bw - o.cw + 2; wx += o.cw) {
+          if (R() < o.win) win += `<rect x="${wx.toFixed(1)}" y="${wy.toFixed(1)}" width="${o.cw - 4}" height="${o.ch - 6}" opacity="${(0.45 + R() * 0.5).toFixed(2)}"/>`;
+        }
+      }
+      out += win + '</g>';
+      /* 건물 폭 안에 간판 글자가 다 들어가는 낱말만 고름 (글자가 테두리 밖으로 나가지 않게) */
+      const fits = neonWords.filter(t => t.length * 12 + 18 <= bw - 12);
+      if (o.neon && bw > 62 && fits.length && R() < 0.6 && neonCount < Math.max(2, Math.round(w / 320))) {
+        const word = fits[Math.floor(R() * fits.length)];
+        const c = neonColors[neonCount % neonColors.length];
+        const sw = word.length * 12 + 18;
+        const sx = x + (bw - sw) / 2, sy = top + 12;
+        out += `<g class="neon${neonCount === 1 ? ' flick' : ''}" style="color:${c}">
+          <rect x="${sx}" y="${sy}" width="${sw}" height="24" rx="5" fill="rgba(10,6,24,.85)" stroke="${c}" stroke-width="2"/>
+          <text x="${sx + sw / 2}" y="${sy + 17}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="13" letter-spacing="1.5" fill="${c}">${word}</text></g>`;
+        neonCount++;
+      } else if (o.neon && R() < 0.35) {
+        const c = neonColors[Math.floor(R() * neonColors.length)];
+        out += `<g class="neon" style="color:${c}"><line x1="${x + 3}" y1="${top + 3}" x2="${x + bw - 3}" y2="${top + 3}" stroke="${c}" stroke-width="2"/></g>`;
+      }
+      x += bw + (R() < 0.3 ? R() * 10 : 0);
+    }
+    return out;
+  }
+
+  s += layer({ hMin: .14, hMax: .36, wMin: 28, wMax: 70, color: '#1d1a4c', win: .08, winColor: '#a9b2ff', cw: 8, ch: 11 });
+  s += layer({ hMin: .14, hMax: .34, wMin: 46, wMax: 112, color: '#13163a', win: .26, winColor: '#ffd98a', cw: 11, ch: 15, roof: true });
+  s += layer({ hMin: .07, hMax: .2, wMin: 60, wMax: 130, color: '#0b0e26', win: .32, winColor: '#ffe3a3', cw: 13, ch: 17, neon: true });
+  s += `<rect x="0" y="${G.railTop - 50}" width="${w}" height="${G.railH + 50}" fill="url(#haze)"/>`;
+
+  // 옥상 바닥
+  const fb = G.railBase, fh = h - fb;
+  s += `<rect x="0" y="${fb - 2}" width="${w}" height="${fh + 2}" fill="url(#floorG)"/>`;
+  let lines = '';
+  for (let k = 1; k <= 6; k++) {
+    const y = fb + fh * Math.pow(k / 6.5, 1.5);
+    lines += `<line x1="0" y1="${y.toFixed(1)}" x2="${w}" y2="${y.toFixed(1)}"/>`;
+  }
+  const step = 70;
+  for (let i = -Math.ceil(w / step); i <= Math.ceil(w / step); i++) {
+    const xt = w / 2 + i * step, xb = w / 2 + i * step * 2.2;
+    lines += `<line x1="${xt}" y1="${fb}" x2="${xb}" y2="${h}"/>`;
+  }
+  s += `<g stroke="#ffffff" stroke-opacity=".06" stroke-width="1">${lines}</g>`;
+  s += `<rect x="0" y="${fb - 2}" width="${w}" height="6" fill="#ff8fe0" opacity=".12"/>`;
+
+  // 난간
+  let rail = '';
+  for (let px = 8; px <= w; px += 56) rail += `<rect x="${px}" y="${G.railTop}" width="5" height="${G.railH}" fill="#3e4370"/>`;
+  rail += `<rect x="0" y="${G.railTop + G.railH * 0.5}" width="${w}" height="4" fill="#3e4370"/>`;
+  rail += `<rect x="0" y="${G.railTop - 3}" width="${w}" height="8" rx="3" fill="url(#railG)"/>`;
+  rail += `<rect x="0" y="${G.railTop - 3}" width="${w}" height="1.5" fill="#c6caff" opacity=".6"/>`;
+  rail += `<rect x="0" y="${fb - 8}" width="${w}" height="9" fill="#24264a"/>`;
+  s += rail;
+
+  svg.innerHTML = s;
+}
+
+function isSky(px, py){
+  if (py >= G.railTop - 4) return false;
+  return !blocks.some(b => px >= b.x && px <= b.x + b.w && py >= b.y);
+}
+
+function makeBgStars(){
+  const R = rng(4242), box = $('#bgStars');
+  let html = '';
+  const n = Math.round(Math.min(140, innerWidth * innerHeight / 9000));
+  for (let i = 0; i < n; i++) {
+    const big = R() < 0.12;
+    html += `<i class="bgstar" style="left:${(R() * 100).toFixed(2)}%;top:${(R() * 58).toFixed(2)}%;--d:${(2 + R() * 4).toFixed(1)}s;--dl:${(-R() * 5).toFixed(1)}s${big ? ';width:3px;height:3px;box-shadow:0 0 4px #fff' : ''}"></i>`;
+  }
+  box.innerHTML = html;
+}
+
+/* ===== 누르면 생기는 별 ===== */
+const userStars = [];
+addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  if (!isSky(e.clientX, e.clientY)) return;
+  const st = document.createElement('i');
+  st.className = 'ustar';
+  st.style.left = (e.clientX / innerWidth * 100) + '%';
+  st.style.top = (e.clientY / innerHeight * 100) + '%';
+  $('#userStars').appendChild(st);
+  userStars.push(st);
+  while (userStars.length > 30) {
+    const old = userStars.shift();
+    old.classList.add('bye');
+    setTimeout(() => old.remove(), 600);
+  }
+});
+
+/* ===== 별똥별 (약 20초마다) ===== */
+function shootingStar(){
+  const el = document.createElement('i');
+  el.className = 'shoot';
+  const w = innerWidth, h = innerHeight;
+  const dx = Math.min(420, w * 0.45), dy = dx * 0.45;
+  el.style.left = (Math.random() * (w * 0.6)) + 'px';
+  el.style.top = (h * (0.04 + Math.random() * 0.2)) + 'px';
+  el.style.setProperty('--dx', dx + 'px');
+  el.style.setProperty('--dy', dy + 'px');
+  el.style.setProperty('--a', (Math.atan2(dy, dx) * 180 / Math.PI) + 'deg');
+  $('#shooting').appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+setTimeout(shootingStar, 4000);
+setInterval(shootingStar, 20000);
+
+/* ===== 옥상 캐릭터 ===== */
+const C = {
+  el: $('#char'), svg: $('#char svg'),
+  x: 0, y: 0, s: 1, facing: 1,
+  action: 'stand', t: 2, tx: 0, ty: 0,
+  timers: [], W: 80, H: 160
+};
+
+function sizeChar(){
+  C.H = Math.round(Math.min(200, Math.max(110, G.h * 0.26)));
+  C.W = C.H / 2;
+  C.el.style.width = C.W + 'px';
+  C.el.style.height = C.H + 'px';
+}
+function yRange(){ return [G.railBase + 8, G.h - 10]; }
+function scaleAt(y){ const [a, b] = yRange(); const t = Math.min(1, Math.max(0, (y - a) / (b - a))); return 0.55 + 0.45 * t; }
+function xRange(s){ const m = C.W * s * 0.36 + 8; return [m, G.w - m]; }
+function clampChar(){
+  const [ya, yb] = yRange();
+  C.y = Math.min(yb, Math.max(ya, C.y));
+  C.s = scaleAt(C.y);
+  const [xa, xb] = xRange(C.s);
+  C.x = Math.min(xb, Math.max(xa, C.x));
+}
+function setView(v){ C.el.dataset.view = v; }
+
+function pickAction(preferWalk){
+  const r = Math.random();
+  if (preferWalk || r < 0.5) startWalk();
+  else if (r < 0.75) { C.action = 'stand'; C.t = 1.5 + Math.random() * 2.5; C.el.classList.remove('walking'); setView('front'); }
+  else { C.action = 'look'; C.t = 2 + Math.random() * 1.5; C.el.classList.remove('walking'); setView('back'); }
+}
+function startWalk(){
+  const [ya, yb] = yRange();
+  for (let i = 0; i < 12; i++) {
+    const ty = ya + Math.random() * (yb - ya);
+    const [xa, xb] = xRange(scaleAt(ty));
+    const tx = xa + Math.random() * (xb - xa);
+    if (Math.abs(tx - C.x) > 50 || i === 11) { C.tx = tx; C.ty = ty; break; }
+  }
+  C.action = 'walk';
+  C.facing = C.tx >= C.x ? 1 : -1;
+  C.el.classList.add('walking');
+  setView('side');
+}
+
+function exhale(){
+  clearCharTimers();
+  C.action = 'exhale';
+  C.el.classList.remove('walking');
+  setView('back');
+  const m = MODES[mode];
+  if (m && m.raise) C.el.classList.add('raise');
+  const times = m && m.big ? [0.55, 1.55, 2.55] : [0.55];
+  const size = C.W * 0.42 * (m && m.big ? 2 : 1);
+  times.forEach(t => C.timers.push(setTimeout(() => spawnPuff(size), t * 1000)));
+}
+function release(){
+  clearCharTimers();
+  C.el.classList.remove('raise');
+  if (C.action === 'exhale') pickAction(Math.random() < 0.6);
+}
+function clearCharTimers(){ C.timers.forEach(clearTimeout); C.timers = []; }
+function spawnPuff(size){
+  const p = document.createElement('i');
+  p.className = 'puff';
+  p.style.setProperty('--sz', size + 'px');
+  $('#puffs').appendChild(p);
+  setTimeout(() => p.remove(), 2900);
+}
+
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (C.action === 'walk') {
+    const dx = C.tx - C.x, dy = C.ty - C.y, d = Math.hypot(dx, dy);
+    const sp = 62 * C.s * dt;
+    if (d <= sp) { C.x = C.tx; C.y = C.ty; pickAction(false); }
+    else { C.x += dx / d * sp; C.y += dy / d * sp; }
+  } else if (C.action === 'stand' || C.action === 'look') {
+    C.t -= dt;
+    if (C.t <= 0) pickAction(false);
+  }
+  clampChar();
+  C.el.style.transform = `translate(${(C.x - C.W / 2).toFixed(1)}px, ${(C.y - C.H).toFixed(1)}px) scale(${C.s.toFixed(3)})`;
+  C.svg.style.transform = (C.el.dataset.view === 'side' && C.facing < 0) ? 'scaleX(-1)' : '';
+  requestAnimationFrame(loop);
+}
+
+/* ===== 화면 흐름 ===== */
+let screen = 'idle', mode = null, count = 0, cheerIdx = 0;
+let runStart = 0, lastSec = -1, lastPhase = null, tickId = null;
+let paused = false, pausedMs = 0;
+
+function show(s){
+  screen = s;
+  $('#sIdle').hidden = s !== 'idle';
+  $('#sReady').hidden = s !== 'ready';
+  $('#sRun').hidden = s !== 'run';
+  $('#sDone').hidden = s !== 'done';
+  $('#home').hidden = s === 'idle' || s === 'done';
+  $('#home').disabled = s === 'run';
+  $('#sub').textContent = s === 'idle' ? '쉬어 가세요.' : MODES[mode].ready;
+  C.el.classList.toggle('smoker', s !== 'idle' && mode === 'smoke');
+}
+
+function goHome(){
+  if (screen === 'run') return;
+  stopTimer();
+  mode = null; count = 0; cheerIdx = 0;
+  show('idle');
+}
+
+function startTimer(){
+  stopTimer();
+  runStart = Date.now();
+  lastSec = -1; lastPhase = null;
+  paused = false; $('#pauseBtn').textContent = '일시정지';
+  $('#clock').textContent = '3:00';
+  show('run');
+  tick();
+  tickId = setInterval(tick, 100);
+}
+function stopTimer(){
+  if (tickId) clearInterval(tickId);
+  tickId = null;
+  paused = false;
+  release();
+}
+/* 일시정지: 남은 시간을 그대로 두고, 캐릭터는 내쉬는 자세를 풀고 걷거나 서 있음 */
+function pauseTimer(){
+  if (screen !== 'run' || paused) return;
+  paused = true;
+  pausedMs = Date.now() - runStart;
+  if (tickId) clearInterval(tickId);
+  tickId = null;
+  clearCharTimers();
+  C.el.classList.remove('raise');
+  $('#puffs').innerHTML = '';
+  if (Math.random() < 0.6) startWalk();
+  else { C.action = 'stand'; C.t = 1.5 + Math.random() * 2.5; C.el.classList.remove('walking'); setView('front'); }
+  $('#bw').textContent = '잠시 멈춤';
+  $('#bn').textContent = '';
+  $('#breath').className = 'breath pause';
+  $('#pauseBtn').textContent = '다시 시작';
+}
+/* 다시 시작: 멈춘 시점부터 이어서 진행 */
+function resumeTimer(){
+  if (screen !== 'run' || !paused) return;
+  paused = false;
+  runStart = Date.now() - pausedMs;
+  lastSec = -1; lastPhase = null;
+  $('#pauseBtn').textContent = '일시정지';
+  tick();
+  tickId = setInterval(tick, 100);
+}
+function tick(){
+  const sec = Math.floor((Date.now() - runStart) / 1000);
+  if (sec === lastSec) return;
+  lastSec = sec;
+  if (sec >= TOTAL) {
+    /* 0:00을 1초 동안 보여 준 뒤 마침 화면으로 넘어감 */
+    $('#clock').textContent = '0:00';
+    if (sec >= TOTAL + 1) finish();
+    return;
+  }
+  const left = TOTAL - sec;
+  $('#clock').textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+  const k = sec % CYCLE;
+  const phase = k < INHALE ? 'in' : 'out';
+  $('#bw').textContent = phase === 'in' ? '들이쉬세요' : '내쉬세요';
+  $('#bn').textContent = phase === 'in' ? INHALE - k : CYCLE - k;
+  $('#breath').className = 'breath ' + phase;
+  if (phase !== lastPhase) {
+    lastPhase = phase;
+    if (phase === 'out') exhale(); else release();
+  }
+}
+function finish(){
+  stopTimer();
+  count++;
+  const m = MODES[mode];
+  $('#doneText').textContent = m.done;
+  $('#cheer').textContent = m.cheers[cheerIdx % m.cheers.length];
+  cheerIdx++;
+  $('#countText').textContent = `이번에 마친 횟수: ${count}번`;
+  show('done');
+}
+
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  mode = b.dataset.mode;
+  $('#startBtn').textContent = MODES[mode].btn;
+  show('ready');
+}));
+$('#startBtn').addEventListener('click', startTimer);
+$('#pauseBtn').addEventListener('click', () => paused ? resumeTimer() : pauseTimer());
+$('#stopBtn').addEventListener('click', () => { stopTimer(); show('ready'); });
+$('#againBtn').addEventListener('click', startTimer);
+$('#home').addEventListener('click', goHome);
+$('#homeBtn2').addEventListener('click', goHome);
+
+/* ===== 시작 ===== */
+function layout(){
+  buildWorld();
+  sizeChar();
+  clampChar();
+}
+let rt;
+addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(layout, 120); });
+
+layout();
+makeBgStars();
+C.x = G.w * (0.3 + Math.random() * 0.4);
+C.y = (G.railBase + G.h) / 2;
+clampChar();
+pickAction(true);
+show('idle');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
