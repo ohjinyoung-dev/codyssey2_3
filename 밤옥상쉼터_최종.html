@@ -642,6 +642,7 @@ function pauseTimer(){
   else { C.action = 'stand'; C.t = 1.5 + Math.random() * 2.5; C.el.classList.remove('walking'); setView('front'); }
   $('#bw').textContent = '잠시 멈춤';
   $('#bn').textContent = '';
+  $('#bn').style.display = 'none'; /* 빈 숫자 칸을 숨겨 '잠시 멈춤'이 가운데에 오게 함 */
   $('#breath').className = 'breath pause';
   $('#pauseBtn').textContent = '다시 시작';
 }
@@ -671,6 +672,7 @@ function tick(){
   const phase = k < INHALE ? 'in' : 'out';
   $('#bw').textContent = phase === 'in' ? '들이쉬세요' : '내쉬세요';
   $('#bn').textContent = phase === 'in' ? INHALE - k : CYCLE - k;
+  $('#bn').style.display = '';
   $('#breath').className = 'breath ' + phase;
   if (phase !== lastPhase) {
     lastPhase = phase;
